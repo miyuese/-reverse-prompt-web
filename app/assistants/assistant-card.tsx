@@ -1,7 +1,6 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { Assistant } from "@prisma/client";
 import { useTransition, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -15,7 +14,15 @@ const assistantSchema = z.object({
   outputTemplate: z.string().trim().min(1, "请输入输出格式模板"),
 });
 
-export function AssistantCard({ item }: { item: Assistant }) {
+type AssistantCardItem = {
+  id: string;
+  name: string;
+  systemPrompt: string;
+  outputTemplate: string;
+  createdAt: Date;
+};
+
+export function AssistantCard({ item }: { item: AssistantCardItem }) {
   const [editing, setEditing] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [errorMsg, setErrorMsg] = useState<string | null>(null);

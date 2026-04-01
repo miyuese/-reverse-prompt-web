@@ -1,7 +1,6 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { ModelConfig } from "@prisma/client";
 import { useTransition, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -20,7 +19,16 @@ const modelConfigSchema = z.object({
   modelName: z.string().trim().min(1, "请输入 Model 名称"),
 });
 
-export function ModelConfigCard({ item }: { item: ModelConfig }) {
+type ModelConfigCardItem = {
+  id: string;
+  name: string;
+  apiKey: string;
+  baseUrl: string;
+  modelName: string;
+  createdAt: Date;
+};
+
+export function ModelConfigCard({ item }: { item: ModelConfigCardItem }) {
   const [editing, setEditing] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
