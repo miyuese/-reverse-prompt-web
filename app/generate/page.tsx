@@ -11,13 +11,13 @@ export default async function GeneratePage() {
 
   return (
     <GenerateClient
-      modelConfigs={modelConfigs.map((c) => ({
+      modelConfigs={modelConfigs.map((c: (typeof modelConfigs)[number]) => ({
         id: c.id,
         name: c.name,
         modelName: c.modelName,
         baseUrl: c.baseUrl,
       }))}
-      assistants={assistants.map((a) => ({
+      assistants={assistants.map((a: (typeof assistants)[number]) => ({
         id: a.id,
         name: a.name,
       }))}

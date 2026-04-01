@@ -61,7 +61,7 @@ export default async function FavoritesPage() {
             </div>
           ) : (
             <div className="mt-6 space-y-4">
-              {favoritePrompts.map((item) => (
+              {favoritePrompts.map((item: Awaited<ReturnType<typeof getFavoritePrompts>>[number]) => (
                 <article
                   key={`${item.type}-${item.id}`}
                   className="rounded-3xl border border-slate-800 bg-slate-950/60 p-5"

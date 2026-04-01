@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const navItems = [
+const navItems: Array<{ href: string; label: string }> = [
   { href: "/", label: "首页" },
   { href: "/generate", label: "生成页" },
   { href: "/models", label: "模型配置" },

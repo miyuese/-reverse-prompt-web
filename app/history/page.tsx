@@ -67,7 +67,7 @@ export default async function HistoryPage({
                 暂无历史任务。请先去生成页完成一次单图或多图生成。
               </div>
             ) : (
-              tasks.map((task) => {
+              tasks.map((task: Awaited<ReturnType<typeof getGenerateTasks>>[number]) => {
                 const isActive = selectedTask?.id === task.id;
                 return (
                   <Link
@@ -94,7 +94,13 @@ export default async function HistoryPage({
                       </p>
                       <p className="text-xs leading-6 text-slate-500">
                         {formatRevisionCount(
-                          task.imageResults.reduce((sum, item) => sum + item.revisions.length, 0)
+                          task.imageResults.reduce(
+                            (
+                              sum: number,
+                              item: Awaited<ReturnType<typeof getGenerateTasks>>[number]["imageResults"][number]
+                            ) => sum + item.revisions.length,
+                            0
+                          )
                         )}
                       </p>
                     </div>
@@ -134,7 +140,8 @@ export default async function HistoryPage({
               </div>
 
               <div className="mt-6 space-y-4">
-                {selectedTask.imageResults.map((item) => (
+                {selectedTask.imageResults.map(
+                  (item: NonNullable<Awaited<ReturnType<typeof getGenerateTaskById>>>["imageResults"][number]) => (
                   <article
                     key={item.id}
                     className="rounded-3xl border border-slate-800 bg-slate-950/60 p-5"
@@ -181,7 +188,10 @@ export default async function HistoryPage({
                             <p className="text-xs uppercase tracking-[0.24em] text-violet-300">
                               修订版本
                             </p>
-                            {item.revisions.map((revision) => (
+                            {item.revisions.map(
+                              (
+                                revision: NonNullable<Awaited<ReturnType<typeof getGenerateTaskById>>>["imageResults"][number]["revisions"][number]
+                              ) => (
                               <div
                                 key={revision.id}
                                 className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4"
