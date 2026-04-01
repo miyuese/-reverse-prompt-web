@@ -86,7 +86,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       ok: true,
       taskId: task.id,
-      imageResults: task.imageResults.map((item) => ({
+      imageResults: task.imageResults.map((item: { id: string; imageIndex: number }) => ({
         id: item.id,
         imageIndex: item.imageIndex,
       })),
