@@ -26,7 +26,7 @@ export async function saveGenerateTask(input: SaveGenerateTaskInput) {
       assistantName: input.assistantName ?? null,
       imageCount: input.imageResults.length,
       imageResults: {
-        create: input.imageResults.map((item) => ({
+        create: input.imageResults.map((item: SaveGenerateTaskInput["imageResults"][number]) => ({
           imageIndex: item.imageIndex,
           originalName: item.originalName,
           mimeType: item.mimeType,
@@ -94,25 +94,27 @@ export async function getFavoritePrompts() {
     }),
   ]);
 
-  const originalPromptItems = imageResults.map((item) => ({
-    id: item.id,
-    type: "original" as const,
-    prompt: item.prompt,
-    isFavorite: item.isFavorite,
-    favoritedAt: item.favoritedAt,
-    createdAt: item.createdAt,
-    imageResultId: item.id,
-    revisionId: null,
-    versionLabel: "原始版",
-    imageIndex: item.imageIndex,
-    originalName: item.originalName,
-    taskId: item.taskId,
-    modelConfigName: item.task.modelConfigName,
-    modelName: item.task.modelName,
-    assistantName: item.task.assistantName,
-  }));
+  const originalPromptItems = imageResults.map(
+    (item: (typeof imageResults)[number]) => ({
+      id: item.id,
+      type: "original" as const,
+      prompt: item.prompt,
+      isFavorite: item.isFavorite,
+      favoritedAt: item.favoritedAt,
+      createdAt: item.createdAt,
+      imageResultId: item.id,
+      revisionId: null,
+      versionLabel: "原始版",
+      imageIndex: item.imageIndex,
+      originalName: item.originalName,
+      taskId: item.taskId,
+      modelConfigName: item.task.modelConfigName,
+      modelName: item.task.modelName,
+      assistantName: item.task.assistantName,
+    })
+  );
 
-  const revisionItems = revisions.map((revision) => ({
+  const revisionItems = revisions.map((revision: (typeof revisions)[number]) => ({
     id: revision.id,
     type: "revision" as const,
     prompt: revision.prompt,
@@ -130,9 +132,16 @@ export async function getFavoritePrompts() {
     assistantName: revision.imageResult.task.assistantName,
   }));
 
-  return [...originalPromptItems, ...revisionItems].sort((a, b) => {
-    const timeA = a.favoritedAt?.getTime() ?? a.createdAt.getTime();
-    const timeB = b.favoritedAt?.getTime() ?? b.createdAt.getTime();
-    return timeB - timeA;
-  });
+  const favoritePromptItems = [...originalPromptItems, ...revisionItems];
+
+  return favoritePromptItems.sort(
+    (
+      a: (typeof favoritePromptItems)[number],
+      b: (typeof favoritePromptItems)[number]
+    ) => {
+      const timeA = a.favoritedAt?.getTime() ?? a.createdAt.getTime();
+      const timeB = b.favoritedAt?.getTime() ?? b.createdAt.getTime();
+      return timeB - timeA;
+    }
+  );
 }
