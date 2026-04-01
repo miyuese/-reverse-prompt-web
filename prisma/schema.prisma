@@ -1,0 +1,84 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model ModelConfig {
+  id            String         @id @default(cuid())
+  name          String
+  baseUrl       String
+  apiKey        String
+  modelName     String
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  generateTasks GenerateTask[]
+}
+
+model Assistant {
+  id             String         @id @default(cuid())
+  name           String
+  systemPrompt   String
+  outputTemplate String
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  generateTasks  GenerateTask[]
+}
+
+model GenerateTask {
+  id              String                @id @default(cuid())
+  modelConfigId   String
+  assistantId     String?
+  modelConfigName String
+  modelName       String
+  assistantName   String?
+  imageCount      Int
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+  modelConfig     ModelConfig           @relation(fields: [modelConfigId], references: [id], onDelete: Cascade)
+  assistant       Assistant?            @relation(fields: [assistantId], references: [id], onDelete: SetNull)
+  imageResults    GeneratedImageResult[]
+
+  @@index([createdAt])
+  @@index([modelConfigId])
+  @@index([assistantId])
+}
+
+model GeneratedImageResult {
+  id             String       @id @default(cuid())
+  taskId         String
+  imageIndex     Int
+  originalName   String
+  mimeType       String
+  prompt         String
+  isFavorite     Boolean      @default(false)
+  favoritedAt    DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  task           GenerateTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  revisions      PromptRevision[]
+
+  @@index([taskId])
+  @@unique([taskId, imageIndex])
+}
+
+model PromptRevision {
+  id              String               @id @default(cuid())
+  imageResultId   String
+  version         Int
+  instruction     String
+  prompt          String
+  isFavorite      Boolean              @default(false)
+  favoritedAt     DateTime?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  imageResult     GeneratedImageResult @relation(fields: [imageResultId], references: [id], onDelete: Cascade)
+
+  @@index([imageResultId])
+  @@unique([imageResultId, version])
+}
