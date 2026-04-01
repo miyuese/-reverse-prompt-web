@@ -35,7 +35,7 @@ export default async function AssistantsPage() {
                 暂无助手设计师。请先在右侧表单新增一条配置。
               </div>
             ) : (
-              assistants.map((item) => (
+              assistants.map((item: Awaited<ReturnType<typeof getAssistants>>[number]) => (
                 <AssistantCard key={item.id} item={item} />
               ))
             )}

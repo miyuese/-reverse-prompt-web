@@ -35,7 +35,7 @@ export default async function ModelsPage() {
                 暂无模型配置。请先在右侧表单新增一条配置。
               </div>
             ) : (
-              modelConfigs.map((item) => (
+              modelConfigs.map((item: Awaited<ReturnType<typeof getModelConfigs>>[number]) => (
                 <ModelConfigCard key={item.id} item={item} />
               ))
             )}
