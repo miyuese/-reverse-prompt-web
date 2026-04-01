@@ -135,7 +135,7 @@ export function ModelConfigForm() {
       </div>
 
       <form className="mt-6 space-y-4" onSubmit={handleSubmit(onSubmit)} noValidate>
-        {formFields.map((field) => {
+        {formFields.map((field: (typeof formFields)[number]) => {
           const errorMessage = errors[field.name]?.message;
 
           return (

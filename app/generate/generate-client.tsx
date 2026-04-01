@@ -106,7 +106,7 @@ export function GenerateClient({
     setSaveStatus(null);
     setPreviews((current) => {
       current.forEach((item) => URL.revokeObjectURL(item.url));
-      return nextFiles.map((file, index) => ({
+      return nextFiles.map((file: File, index: number) => ({
         id: `${file.name}-${file.lastModified}-${index}`,
         file,
         url: URL.createObjectURL(file),
@@ -169,7 +169,7 @@ export function GenerateClient({
       }
 
       const successfulResults = previews
-        .map((item, index) => {
+        .map((item: PreviewItem, index: number) => {
           const result = newResults.find((entry) => entry.previewId === item.id);
           if (!result?.prompt) {
             return null;
@@ -293,7 +293,7 @@ export function GenerateClient({
           {/* 图片预览网格 */}
           {previews.length > 0 && (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-              {previews.map((item) => (
+              {previews.map((item: PreviewItem) => (
                 <div
                   key={item.id}
                   className="relative aspect-square overflow-hidden rounded-2xl border border-slate-700 bg-slate-900"
@@ -328,7 +328,7 @@ export function GenerateClient({
                   </p>
                 )}
               </div>
-              {previews.map((item, index) => {
+              {previews.map((item: PreviewItem, index: number) => {
                 const result = results.find((r) => r.previewId === item.id);
                 return (
                   <section
@@ -378,7 +378,7 @@ export function GenerateClient({
                                   initialIsFavorite={result.isFavorite ?? false}
                                   onToggled={(nextIsFavorite) => {
                                     setResults((current) =>
-                                      current.map((entry) =>
+                                      current.map((entry: ResultItem) =>
                                         entry.previewId === result.previewId
                                           ? { ...entry, isFavorite: nextIsFavorite }
                                           : entry
@@ -400,7 +400,7 @@ export function GenerateClient({
                                   helperText="和 Quest 7.1/10 已验证的稳定链路一致：基于当前这张图的已有 prompt 继续向 AI 提要求，生成新的完整版本。"
                                   onCreated={(revision) => {
                                     setResults((current) =>
-                                      current.map((entry) => {
+                                      current.map((entry: ResultItem) => {
                                         if (entry.previewId !== result.previewId) {
                                           return entry;
                                         }
@@ -423,7 +423,7 @@ export function GenerateClient({
                                 <p className="text-xs uppercase tracking-[0.24em] text-violet-300">
                                   修订版本
                                 </p>
-                                {result.revisions?.map((revision) => (
+                                {result.revisions?.map((revision: RevisionItem) => (
                                   <div
                                     key={revision.id}
                                     className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4"
@@ -441,17 +441,17 @@ export function GenerateClient({
                                          initialIsFavorite={revision.isFavorite}
                                          onToggled={(nextIsFavorite) => {
                                            setResults((current) =>
-                                             current.map((entry) => {
-                                               if (entry.previewId !== result.previewId) {
-                                                 return entry;
-                                               }
+                                              current.map((entry: ResultItem) => {
+                                                if (entry.previewId !== result.previewId) {
+                                                  return entry;
+                                                }
 
-                                               return {
-                                                 ...entry,
-                                                 revisions: entry.revisions?.map((entryRevision) =>
-                                                   entryRevision.id === revision.id
-                                                     ? { ...entryRevision, isFavorite: nextIsFavorite }
-                                                     : entryRevision
+                                                return {
+                                                  ...entry,
+                                                  revisions: entry.revisions?.map((entryRevision: RevisionItem) =>
+                                                    entryRevision.id === revision.id
+                                                      ? { ...entryRevision, isFavorite: nextIsFavorite }
+                                                      : entryRevision
                                                  ),
                                                };
                                              })
@@ -476,10 +476,10 @@ export function GenerateClient({
                                            helperText="这里会复制当前选中的旧版本作为新的编辑基底，再生成一个新的修订版本，原记录不会被覆盖。"
                                            onCreated={(createdRevision) => {
                                              setResults((current) =>
-                                               current.map((entry) => {
-                                                 if (entry.previewId !== result.previewId) {
-                                                   return entry;
-                                                 }
+                                                current.map((entry: ResultItem) => {
+                                                  if (entry.previewId !== result.previewId) {
+                                                    return entry;
+                                                  }
 
                                                  return {
                                                    ...entry,
@@ -526,7 +526,7 @@ export function GenerateClient({
             ) : (
               <div className="mt-4 space-y-2">
                 <p className="text-xs text-slate-400">请先明确选择一条模型配置后再生成。</p>
-                {modelConfigs.map((cfg) => (
+                {modelConfigs.map((cfg: ModelConfig) => (
                   <label
                     key={cfg.id}
                     className={`flex cursor-pointer items-center justify-between rounded-2xl border px-4 py-3 text-sm transition ${
@@ -577,7 +577,7 @@ export function GenerateClient({
                   className="accent-violet-400"
                 />
               </label>
-              {assistants.map((ast) => (
+              {assistants.map((ast: Assistant) => (
                 <label
                   key={ast.id}
                   className={`flex cursor-pointer items-center justify-between rounded-2xl border px-4 py-3 text-sm transition ${
