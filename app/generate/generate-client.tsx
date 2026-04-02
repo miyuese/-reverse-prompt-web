@@ -50,6 +50,66 @@ type SaveStatus = {
 };
 
 const SYSTEM_ASSISTANT_OPTION = "__system_default__";
+const MAX_IMAGE_DIMENSION = 1600;
+const JPEG_QUALITY = 0.82;
+const MAX_UPLOAD_BYTES = 1_800_000;
+
+async function compressImageFile(file: File): Promise<File> {
+  if (!file.type.startsWith("image/")) {
+    return file;
+  }
+
+  const bitmap = await createImageBitmap(file);
+  const longestSide = Math.max(bitmap.width, bitmap.height);
+
+  if (longestSide <= MAX_IMAGE_DIMENSION && file.size <= 1_800_000) {
+    bitmap.close();
+    return file;
+  }
+
+  const scale = Math.min(1, MAX_IMAGE_DIMENSION / longestSide);
+  const targetWidth = Math.max(1, Math.round(bitmap.width * scale));
+  const targetHeight = Math.max(1, Math.round(bitmap.height * scale));
+
+  const canvas = document.createElement("canvas");
+  canvas.width = targetWidth;
+  canvas.height = targetHeight;
+
+  const context = canvas.getContext("2d");
+  if (!context) {
+    bitmap.close();
+    return file;
+  }
+
+  context.drawImage(bitmap, 0, 0, targetWidth, targetHeight);
+  bitmap.close();
+
+  const blob = await new Promise<Blob | null>((resolve) => {
+    canvas.toBlob(resolve, "image/jpeg", JPEG_QUALITY);
+  });
+
+  if (!blob) {
+    return file;
+  }
+
+  if (blob.size > MAX_UPLOAD_BYTES) {
+    const secondPassBlob = await new Promise<Blob | null>((resolve) => {
+      canvas.toBlob(resolve, "image/jpeg", 0.68);
+    });
+
+    if (secondPassBlob) {
+      return new File([secondPassBlob], file.name.replace(/\.[^.]+$/, "") + ".jpg", {
+        type: "image/jpeg",
+        lastModified: file.lastModified,
+      });
+    }
+  }
+
+  return new File([blob], file.name.replace(/\.[^.]+$/, "") + ".jpg", {
+    type: "image/jpeg",
+    lastModified: file.lastModified,
+  });
+}
 
 async function parseJsonResponse(response: Response) {
   const contentType = response.headers.get("content-type") || "";
@@ -65,6 +125,10 @@ async function parseJsonResponse(response: Response) {
 }
 
 function getFriendlyGenerateError(error: string) {
+  if (error.includes("HTTP 413") || error.includes("FUNCTION_PAYLOAD_TOO_LARGE")) {
+    return "上传图片体积过大，已超出 Vercel 请求限制。请改用更小的图片，或等待系统自动压缩后再试。";
+  }
+
   if (error.includes("API Key") || error.includes("鉴权失败")) {
     return "当前模型配置的 API Key 不可用，请前往模型配置页检查后再试。";
   }
@@ -162,7 +226,8 @@ export function GenerateClient({
       const newResults: ResultItem[] = [];
       for (const item of previews) {
         const fd = new FormData();
-        fd.append("image", item.file);
+        const uploadFile = await compressImageFile(item.file);
+        fd.append("image", uploadFile);
         fd.append("configId", selectedConfigId);
         if (selectedAssistantId && selectedAssistantId !== SYSTEM_ASSISTANT_OPTION) {
           fd.append("assistantId", selectedAssistantId);
