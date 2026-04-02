@@ -32,6 +32,12 @@ export async function POST(req: NextRequest) {
         item.prompt.trim().length > 0
     );
 
+    console.log("[historyRoute] start", {
+      modelConfigId: modelConfigId ?? null,
+      assistantId: assistantId ?? null,
+      imageResultsCount: imageResults.length,
+    });
+
     if (!modelConfigId) {
       return NextResponse.json({ ok: false, error: "缺少模型配置 ID" }, { status: 400 });
     }
@@ -46,10 +52,12 @@ export async function POST(req: NextRequest) {
     ]);
 
     if (!modelConfig) {
+      console.warn("[historyRoute] missing model config", { modelConfigId });
       return NextResponse.json({ ok: false, error: "模型配置不存在，无法保存历史" }, { status: 404 });
     }
 
     if (assistantId && !assistant) {
+      console.warn("[historyRoute] missing assistant", { assistantId, modelConfigId });
       return NextResponse.json({ ok: false, error: "助手设计师不存在，无法保存历史" }, { status: 404 });
     }
 
@@ -79,6 +87,13 @@ export async function POST(req: NextRequest) {
 
     revalidatePath("/history");
     revalidatePath(`/history/${task.id}`);
+
+    console.log("[historyRoute] success", {
+      taskId: task.id,
+      modelConfigId: modelConfig.id,
+      assistantId: assistant?.id ?? null,
+      imageCount: task.imageCount,
+    });
 
     return NextResponse.json({
       ok: true,

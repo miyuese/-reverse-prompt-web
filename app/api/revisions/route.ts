@@ -22,6 +22,13 @@ export async function POST(req: NextRequest) {
     const basePrompt = body.basePrompt?.trim();
     const instruction = body.instruction?.trim();
 
+    console.log("[revisionsRoute] start", {
+      imageResultId: imageResultId ?? null,
+      revisionId: revisionId ?? null,
+      hasBasePrompt: !!basePrompt,
+      instructionLength: instruction?.length ?? 0,
+    });
+
     if (!imageResultId) {
       return NextResponse.json({ ok: false, error: "缺少图片结果 ID" }, { status: 400 });
     }
@@ -47,6 +54,7 @@ export async function POST(req: NextRequest) {
     });
 
     if (!imageResult) {
+      console.warn("[revisionsRoute] missing image result", { imageResultId });
       return NextResponse.json({ ok: false, error: "原始图片结果不存在" }, { status: 404 });
     }
 
@@ -61,6 +69,10 @@ export async function POST(req: NextRequest) {
       });
 
       if (!baseRevision) {
+        console.warn("[revisionsRoute] missing base revision", {
+          revisionId,
+          imageResultId: imageResult.id,
+        });
         return NextResponse.json({ ok: false, error: "指定的修订版本不存在" }, { status: 404 });
       }
 
@@ -84,6 +96,11 @@ export async function POST(req: NextRequest) {
     });
 
     if (!reviseResult.ok) {
+      console.warn("[revisionsRoute] provider error", {
+        imageResultId: imageResult.id,
+        revisionId: revisionId ?? null,
+        error: reviseResult.error,
+      });
       return NextResponse.json({ ok: false, error: reviseResult.error }, { status: 502 });
     }
 
@@ -98,6 +115,13 @@ export async function POST(req: NextRequest) {
 
     revalidatePath("/history");
     revalidatePath(`/history?taskId=${imageResult.taskId}`);
+
+    console.log("[revisionsRoute] success", {
+      imageResultId: imageResult.id,
+      revisionId: revision.id,
+      version: revision.version,
+      promptLength: revision.prompt.length,
+    });
 
     return NextResponse.json({
       ok: true,

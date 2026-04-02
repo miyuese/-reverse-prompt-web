@@ -3,6 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { prisma } from "../../../lib/prisma";
 
+export const runtime = "nodejs";
+export const maxDuration = 30;
+
 export async function POST(req: NextRequest) {
   let body: {
     imageResultId?: string;
@@ -18,6 +21,12 @@ export async function POST(req: NextRequest) {
 
   const imageResultId = body.imageResultId?.trim();
   const revisionId = body.revisionId?.trim();
+
+  console.log("[favoritesRoute] start", {
+    imageResultId: imageResultId ?? null,
+    revisionId: revisionId ?? null,
+    isFavorite: body.isFavorite,
+  });
 
   if ((!imageResultId && !revisionId) || (imageResultId && revisionId)) {
     return NextResponse.json(
@@ -45,6 +54,11 @@ export async function POST(req: NextRequest) {
       revalidatePath("/history");
       revalidatePath("/favorites");
 
+      console.log("[favoritesRoute] success original", {
+        imageResultId,
+        isFavorite: updated.isFavorite,
+      });
+
       return NextResponse.json({
         ok: true,
         isFavorite: updated.isFavorite,
@@ -61,6 +75,11 @@ export async function POST(req: NextRequest) {
 
     revalidatePath("/history");
     revalidatePath("/favorites");
+
+    console.log("[favoritesRoute] success revision", {
+      revisionId,
+      isFavorite: updated.isFavorite,
+    });
 
     return NextResponse.json({
       ok: true,

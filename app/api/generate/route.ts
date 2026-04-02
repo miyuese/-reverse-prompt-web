@@ -25,6 +25,15 @@ export async function POST(req: NextRequest) {
     const configId = formData.get("configId") as string | null;
     const assistantId = formData.get("assistantId") as string | null;
 
+    console.log("[generateRoute] start", {
+      hasImage: !!imageFile && typeof imageFile !== "string",
+      imageName: imageFile && typeof imageFile !== "string" ? imageFile.name : null,
+      imageType: imageFile && typeof imageFile !== "string" ? imageFile.type : null,
+      imageSize: imageFile && typeof imageFile !== "string" ? imageFile.size : null,
+      configId,
+      assistantId: assistantId ?? null,
+    });
+
     if (!imageFile || typeof imageFile === "string") {
       return NextResponse.json({ ok: false, error: "请上传图片" }, { status: 400 });
     }
@@ -34,6 +43,7 @@ export async function POST(req: NextRequest) {
 
     const config = await prisma.modelConfig.findUnique({ where: { id: configId } });
     if (!config) {
+      console.warn("[generateRoute] missing model config", { configId });
       return NextResponse.json({ ok: false, error: "模型配置不存在，请重新选择" }, { status: 404 });
     }
 
@@ -60,6 +70,12 @@ export async function POST(req: NextRequest) {
     );
 
     if (!result.ok) {
+      console.warn("[generateRoute] provider error", {
+        configId,
+        assistantId: assistantId ?? null,
+        error: result.error,
+      });
+
       const isImageCapabilityError =
         result.error.includes("不支持图片输入") || result.error.includes("不支持此图片消息格式");
 
@@ -68,6 +84,12 @@ export async function POST(req: NextRequest) {
         { status: isImageCapabilityError ? 400 : 502 }
       );
     }
+
+    console.log("[generateRoute] success", {
+      configId,
+      assistantId: assistantId ?? null,
+      promptLength: result.content.length,
+    });
 
     return NextResponse.json({ ok: true, prompt: result.content });
   } catch (error) {
