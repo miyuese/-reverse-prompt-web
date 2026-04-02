@@ -2,6 +2,19 @@
 
 import { useState, useTransition } from "react";
 
+async function parseJsonResponse(response: Response) {
+  const contentType = response.headers.get("content-type") || "";
+
+  if (contentType.includes("application/json")) {
+    return response.json();
+  }
+
+  const text = await response.text();
+  throw new Error(
+    `接口返回了非 JSON 响应（HTTP ${response.status}）。${text ? ` 响应片段：${text.slice(0, 160)}` : ""}`
+  );
+}
+
 type RevisionResult = {
   id: string;
   version: number;
@@ -108,7 +121,7 @@ export function PromptRevisePanel({
                       }),
                     });
 
-                    const data = await response.json();
+                    const data = await parseJsonResponse(response);
 
                     if (!data.ok) {
                       setError(data.error || "生成修订版失败，请稍后重试。");
@@ -118,8 +131,8 @@ export function PromptRevisePanel({
                     onCreated?.(data.revision);
                     setInstruction("");
                     setOpen(false);
-                  } catch {
-                    setError("生成修订版失败，请检查网络后重试。");
+                  } catch (error) {
+                    setError(error instanceof Error ? error.message : "生成修订版失败，请检查网络后重试。");
                   }
                 });
               }}

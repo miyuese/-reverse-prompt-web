@@ -51,6 +51,19 @@ type SaveStatus = {
 
 const SYSTEM_ASSISTANT_OPTION = "__system_default__";
 
+async function parseJsonResponse(response: Response) {
+  const contentType = response.headers.get("content-type") || "";
+
+  if (contentType.includes("application/json")) {
+    return response.json();
+  }
+
+  const text = await response.text();
+  throw new Error(
+    `接口返回了非 JSON 响应（HTTP ${response.status}）。${text ? ` 响应片段：${text.slice(0, 160)}` : ""}`
+  );
+}
+
 function getFriendlyGenerateError(error: string) {
   if (error.includes("API Key") || error.includes("鉴权失败")) {
     return "当前模型配置的 API Key 不可用，请前往模型配置页检查后再试。";
@@ -157,14 +170,18 @@ export function GenerateClient({
 
         try {
           const res = await fetch("/api/generate", { method: "POST", body: fd });
-          const data = await res.json();
+          const data = await parseJsonResponse(res);
           if (data.ok) {
             newResults.push({ previewId: item.id, prompt: data.prompt });
           } else {
             newResults.push({ previewId: item.id, prompt: "", error: data.error });
           }
-        } catch {
-          newResults.push({ previewId: item.id, prompt: "", error: "网络请求失败，请稍后重试" });
+        } catch (error) {
+          newResults.push({
+            previewId: item.id,
+            prompt: "",
+            error: error instanceof Error ? error.message : "网络请求失败，请稍后重试",
+          });
         }
       }
 
@@ -201,7 +218,7 @@ export function GenerateClient({
             }),
           });
 
-          const saveData = await saveResponse.json();
+          const saveData = await parseJsonResponse(saveResponse);
 
           if (saveData.ok) {
             const imageResultIdMap = new Map<number, string>(
